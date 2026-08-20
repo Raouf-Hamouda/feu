@@ -29,7 +29,7 @@ var PAPIER = {
   f4:{src:URI.flammes_4,w:1800,h:903,top:1,mi:372,bande:826,bas:826},
   f5:{src:URI.flammes_5,w:1800,h:756,top:0,mi:154,bande:238,bas:726}
 };
-var F = { w:1600, devant:-45, mid:20, fond:70,
+var F = { w:1600, devant:-45, mid:45, fond:150,
           braises:{w:900,cx:800},
           accents:[{w:520,cx:430,plan:'mid'},{w:420,cx:1250,plan:'devant'}] };
 var B = 900;
@@ -62,18 +62,25 @@ gD.innerHTML = feu('devant');
 
 /* cadrage : la fenetre svg suit exactement la forme de l ecran, feu ancre en bas.
    ecran plus haut que 16:9 (telephone tenu droit) : toute la largeur du feu visible, du blanc au dessus.
-   ecran plus large que 16:9 : toute la hauteur visible, du blanc sur les cotes. */
+   ecran plus large : le feu est reconstruit a la largeur de l ecran, bord a bord.
+   dans tous les cas le feu deborde du cadre de 80 unites de chaque cote,
+   pour que le balancement lateral ne decouvre jamais de blanc. */
 var scene = document.getElementById('scene');
 function cadre(){
   var vw = window.innerWidth, vh = window.innerHeight;
   if(!vw || !vh) return;
-  if(vw/vh < 1600/900){
-    var h = 1600*vh/vw;
-    scene.setAttribute('viewBox', '0 '+n1(900-h)+' 1600 '+n1(h));
-  } else {
-    var w = 900*vw/vh;
-    scene.setAttribute('viewBox', n1(800-w/2)+' 0 '+n1(w)+' 900');
-  }
+  var vbW, vbX, vbY, vbH;
+  if(vw/vh < 1600/900){ vbW = 1600; vbX = 0; vbH = 1600*vh/vw; vbY = 900-vbH; }
+  else { vbH = 900; vbY = 0; vbW = 900*vw/vh; vbX = 800-vbW/2; }
+  scene.setAttribute('viewBox', n1(vbX)+' '+n1(vbY)+' '+n1(vbW)+' '+n1(vbH));
+  var s = vbW/1600, g = Math.max(1,s);
+  F.w = vbW + 160;
+  F.braises.w = 900*g; F.braises.cx = 800;
+  F.accents[0].w = 520*g; F.accents[0].cx = 800 + (430-800)*s;
+  F.accents[1].w = 420*g; F.accents[1].cx = 800 + (1250-800)*s;
+  gF.innerHTML = feu('fond');
+  gM.innerHTML = feu('mid');
+  gD.innerHTML = feu('devant');
 }
 window.addEventListener('resize', cadre);
 window.addEventListener('orientationchange', cadre);
